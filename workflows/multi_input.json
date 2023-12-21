@@ -1,0 +1,28 @@
+{
+    "entry_point": "join",
+    "tasks": {
+        "slow_goodbye": {
+            "steps": [
+                {
+                    "wait": 3
+                },
+                {
+                    "length": "@{name1}"
+                }
+            ]
+        },
+        "slow_name": {
+            "steps": [
+                {
+                    "wait": 1
+                },
+                {
+                    "length": "@{name2}"
+                }
+            ]
+        },
+        "join": {
+            "output": "First input length: ${slow_goodbye} Second input length: ${slow_name}"
+        }
+    }
+}

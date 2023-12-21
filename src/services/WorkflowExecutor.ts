@@ -1,4 +1,4 @@
-import { Workflow } from '../types/Workflow';
+import { TaskOutput, Workflow } from '../types/Workflow';
 import { InputContext } from '../types/InputContext';
 import { executeTask } from '../utils/taskExecutionUtils';
 
@@ -13,12 +13,16 @@ class WorkflowExecutor {
         const tasks = workflow.tasks;
 
         if (!entryPoint || !tasks || !tasks[entryPoint]) {
-            throw new Error('Invalid workflow format');
+            throw new Error(`Invalid workflow: ${JSON.stringify(workflow)}`);
         }
 
         console.log(`Executing workflow with entry point ${entryPoint}`);
 
-        const output = await executeTask(tasks[entryPoint], workflow, this.inputContext);
+        let output = await executeTask(tasks[entryPoint], workflow, this.inputContext);
+
+        if (typeof output !== 'string') {
+            output = JSON.stringify(output);
+        }
 
         console.log(`Workflow executed, output: ${output}`);
 

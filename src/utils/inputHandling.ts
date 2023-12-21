@@ -19,7 +19,11 @@ export const handleCheckWorkflowInputs = (socket: Socket) => {
         try {
             const workflow = loadWorkflow(workflowName);
             
-            callback(getInputMatches(JSON.stringify(workflow)));
+            const inputMatches = getInputMatches(JSON.stringify(workflow));
+
+            const uniqueInputMatches = [...new Set(inputMatches)];
+
+            callback(uniqueInputMatches);
         }
         catch {
             callback({ errorMessage: 'Error loading workflow' });

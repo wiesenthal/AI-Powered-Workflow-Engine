@@ -31,3 +31,25 @@ export type PossibleStepKeys = ExtractKeys<UnionToIntersection<Step>>;
 export type PossibleStepValues = UnionToIntersection<Step>[PossibleStepKeys];
 
 export type StepOutput = string | number | boolean;
+
+export type UnparsedWaitStep = {
+    wait: string | number
+}
+
+export type UnparsedLengthStep = {
+    length: string
+}
+
+export type UnparsedGtStep = {
+    gt: [string | number, string | number]
+}
+
+export type UnparsedIfStep = {
+    if: {
+        condition: string | boolean
+        true: StepOutput
+        false: StepOutput
+    }
+}
+
+export type UnparsedStep = UnparsedWaitStep | UnparsedLengthStep | UnparsedGtStep | UnparsedIfStep;

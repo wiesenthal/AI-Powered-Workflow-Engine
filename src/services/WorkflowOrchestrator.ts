@@ -1,7 +1,8 @@
 import { Socket } from "socket.io";
 import WorkflowExecutor from "./WorkflowExecutor";
-import { handleInputUpdates } from "../utils/inputHandling";
+import { handleCheckWorkflowInputs, handleInputUpdates } from "../utils/inputHandling";
 import { loadWorkflow } from "../utils/fileUtils";
+import { SharedError } from "../../shared/types/error";
 
 class WorkflowOrhestrator {
     private socket: Socket;
@@ -11,6 +12,7 @@ class WorkflowOrhestrator {
         this.workflowExecutor = new WorkflowExecutor();
 
         handleInputUpdates(this.socket, this.setInputContextValue);
+        handleCheckWorkflowInputs(this.socket);
 
         this.handleWorkflowExecution();
     }
@@ -23,7 +25,7 @@ class WorkflowOrhestrator {
     private handleWorkflowExecution = () => {
         this.socket.on('executeWorkflow', async (
             workflowName: string, 
-            callback: (output: string | Object) => void,
+            callback: (output: string | SharedError) => void,
         ) => {
             console.log(`Executing workflow ${workflowName}`);
             try {

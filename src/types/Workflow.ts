@@ -1,22 +1,15 @@
-enum StepType {
-    wait,
-    length,
-    gt,
-    if
-}
+import { Step } from "./Step";
 
-export type Step = {
-    [key in StepType]: any;
-};
+export type TaskOutput = string;
 
-export type Task = {
-    steps?: Step[];
-    output: string;
-};
+export type Task = 
+    | { steps: Step[]; output?: never }
+    | { steps?: never; output: TaskOutput }
+    | { steps: Step[]; output: TaskOutput };
 
 export type Workflow = {
     entry_point: string;
-    tasks: { 
+    tasks: {
         [key: string]: Task
     };
 };

@@ -1,6 +1,6 @@
 import { InputContext } from "../src/types/InputContext";
 import { Workflow } from "../src/types/Workflow";
-import { getInputMatches, getTaskNameMatches, parseTaskOutput, parseTaskOutputForInputs, parseTaskOutputForTaskNames, replaceInputReferences, replaceTaskReferences } from "../src/utils/parsingUtils";
+import { getInputMatches, getTaskNameMatches, parseTaskOutput, parseOutputForInputs, parseOutputForTaskNames, replaceInputReferences, replaceTaskReferences } from "../src/utils/parsingUtils";
 
 describe('parsingUtils', () => {
     describe('getTaskNameMatches', () => {
@@ -79,7 +79,7 @@ describe('parsingUtils', () => {
             };
             const inputContext: InputContext = {};
 
-            const result = await parseTaskOutputForTaskNames("Hello ${name}!", workflow, inputContext);
+            const result = await parseOutputForTaskNames("Hello ${name}!", workflow, inputContext);
 
             expect(result).toEqual('Hello Alan!');
         });
@@ -91,7 +91,7 @@ describe('parsingUtils', () => {
                 "val": "thisval"
             };
 
-            const result = parseTaskOutputForInputs("value is @{val}", inputContext);
+            const result = parseOutputForInputs("value is @{val}", inputContext);
 
             expect(result).toEqual('value is thisval');
         });

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { Workflow } from '../../types/Workflow';
+import { Workflow } from '../types/Workflow';
 
 export function loadWorkflow(name: string): Workflow {
     const filePath = `workflows/${name}.json`;

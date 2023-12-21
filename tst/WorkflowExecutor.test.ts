@@ -1,16 +1,11 @@
 import WorkflowExecutor from '../src/services/WorkflowExecutor';
-import { Workflow, Task, WorkflowContext } from '../types/Workflow';
+import { Workflow, Task } from '../src/types/Workflow';
 
 describe('WorkflowExecutor', () => {
-    let workflowExecutor: typeof WorkflowExecutor;
+    let workflowExecutor: WorkflowExecutor;
 
     beforeEach(() => {
-        workflowExecutor = WorkflowExecutor;
-    });
-
-    afterEach(() => {
-        // Clean up any created workflow contexts
-        workflowExecutor['workflowContexts'].clear();
+        workflowExecutor = new WorkflowExecutor();
     });
 
     describe('executeWorkflow', () => {

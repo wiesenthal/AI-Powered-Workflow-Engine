@@ -1,9 +1,9 @@
 import express from 'express';
 import path from 'path';
-import workflowExecutor from './services/WorkflowExecutor';
-import { loadWorkflow } from './utils/fileUtils';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
+
+import WorkflowOrhestrator from './services/WorkflowOrchestrator';
 
 const app = express();
 const port = 5001;
@@ -24,11 +24,5 @@ server.listen(port, () => {
 io.on('connection', async (socket: Socket) => {
     console.log('Socket connection received');
 
-    socket.on('executeWorkflow', async (workflowName: string, callback: Function) => {
-        console.log(`Executing workflow ${workflowName}`);
-        const workflow = loadWorkflow(workflowName);
-        console.log(`Workflow loaded: ${JSON.stringify(workflow)}`)
-        const output = await workflowExecutor.executeWorkflow(workflow);
-        callback(output);
-    });
+    new WorkflowOrhestrator(socket);
 });

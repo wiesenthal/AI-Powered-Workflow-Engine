@@ -20,10 +20,3 @@ export type Workflow = {
         [key: string]: Task
     };
 };
-
-export type WorkflowContext = {
-    workflow: Workflow;
-    inputs: {
-        [key: string]: any;
-    }
-};

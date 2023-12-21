@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Workflow, Task, WorkflowContext } from '../../types/Workflow';
+import { getTaskNameMatches, replaceTaskReferences } from '../utils/parsingUtils';
 
 class WorkflowExecutor {
     private workflowContexts: Map<string, WorkflowContext>;
@@ -8,14 +9,6 @@ class WorkflowExecutor {
     }
 
     async executeWorkflow(workflow: Workflow): Promise<string> {
-        const workflowId = uuidv4();
-
-        this.workflowContexts.set(
-            workflowId, {
-                workflow,
-                inputs: {}
-        });
-
         const entryPoint = workflow.entry_point;
         const tasks = workflow.tasks;
 
@@ -23,18 +16,21 @@ class WorkflowExecutor {
             throw new Error('Invalid workflow format');
         }
 
-        console.log(`Executing workflow ${workflowId} with entry point ${entryPoint}`);
+        const workflowContext: WorkflowContext = {
+            workflow,
+            inputs: {}
+        }
 
-        const output = await this.executeTask(tasks[entryPoint]);
+        console.log(`Executing workflow with entry point ${entryPoint}`);
 
-        console.log(`Workflow ${workflowId} executed, output: ${output}`);
+        const output = await this.executeTask(tasks[entryPoint], workflowContext);
 
-        this.workflowContexts.delete(workflowId);
+        console.log(`Workflow executed, output: ${output}`);
 
         return output;
     }
 
-    async executeTask(task: Task, arg?: any): Promise<string> {
+    async executeTask(task: Task, workflowContext: WorkflowContext): Promise<string> {
         if (!task) {
             throw new Error('Invalid task format');
         }
@@ -45,11 +41,54 @@ class WorkflowExecutor {
             let previousStepOutput: any = undefined;
             task.steps.forEach(async (step) => {
                 console.log(`Executing step ${JSON.stringify(step)}`);
-                previousStepOutput = await this.executeTask(step, previousStepOutput);
+                previousStepOutput = await this.executeStep(step, previousStepOutput);
             });
         }
 
-        return task.output;
+        let output = task.output;
+
+        const taskNameMatches = getTaskNameMatches(output);
+
+        if (taskNameMatches) {
+            const tasksReferenced = taskNameMatches.map(
+                (taskReferenceMatch: string) => 
+                    workflowContext.workflow.tasks[taskReferenceMatch]
+            );
+
+            const tasksReferencedOutputs = await Promise.all(
+                tasksReferenced.map(
+                    async (taskReferenced: Task) =>
+                        await this.executeTask(taskReferenced, workflowContext)
+                )
+            );
+            
+            output = replaceTaskReferences(output, taskNameMatches, tasksReferencedOutputs);
+        }
+        
+        return output;
+    }
+
+    async executeStep(step: any, arg?: any): Promise<any> {
+        throw new Error('Not implemented');
+
+        if (!step) {
+            throw new Error('Invalid step format');
+        }
+
+        const stepType = Object.keys(step)[0];
+
+        // switch (stepType) {
+        //     case 'wait':
+        //         return this.executeWaitStep(step);
+        //     case 'length':
+        //         return this.executeLengthStep(step, arg);
+        //     case 'gt':
+        //         return this.executeGtStep(step, arg);
+        //     case 'if':
+        //         return this.executeIfStep(step, arg);
+        //     default:
+        //         throw new Error(`Invalid step type ${stepType}`);
+        // }
     }
 }
 

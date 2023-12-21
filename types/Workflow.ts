@@ -1,5 +1,16 @@
+enum StepType {
+    wait,
+    length,
+    gt,
+    if
+}
+
+export type Step = {
+    [key in StepType]: any;
+};
+
 export type Task = {
-    steps?: Task[];
+    steps?: Step[];
     output: string;
 };
 

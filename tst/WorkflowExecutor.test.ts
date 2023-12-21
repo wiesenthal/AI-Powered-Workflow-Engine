@@ -27,21 +27,52 @@ describe('WorkflowExecutor', () => {
             const result = await workflowExecutor.executeWorkflow(workflow);
 
             expect(result).toBeDefined();
-            expect(workflowExecutor['workflowContexts'].size).toBe(0);
             expect(result).toBe("hello world!");
         });
     });
 
-    describe('executeTask', () => {
-        it('should execute a task and return a unique ID', async () => {
-            const task: Task = {
-                "output": "hello bob!"
-            }
+    describe('executeWorkflowWithTaskThatCallsAnotherTask', () => {
+        it('should execute a task that calls another task and return the correct output', async () => {
+            const workflow: Workflow = {
+                "entry_point": "hello_name",
+                "tasks": {
+                    "name": {
+                        "output": "Alan"
+                    },
+                    "hello_name": {
+                        "output": "hello ${name}!"
+                    }
+                }
+            };
 
-            const result = await workflowExecutor.executeTask(task);
+            const result = await workflowExecutor.executeWorkflow(workflow);
 
             expect(result).toBeDefined();
-            expect(result).toBe("hello bob!");
+            expect(result).toBe("hello Alan!");
+        });
+    });
+
+    describe('executeWorkflowWithTaskThatCallsMultipleTasks', () => {
+        it('should execute a task that calls multiple task and return the correct output', async () => {
+            const workflow: Workflow = {
+                "entry_point": "hello_two_names",
+                "tasks": {
+                    "name": {
+                        "output": "Alan"
+                    },
+                    "other_name": {
+                        "output": "Bob"
+                    },
+                    "hello_two_names": {
+                        "output": "hello ${name} and ${other_name}!"
+                    }
+                }
+            };
+
+            const result = await workflowExecutor.executeWorkflow(workflow);
+
+            expect(result).toBeDefined();
+            expect(result).toBe("hello Alan and Bob!");
         });
     });
 });

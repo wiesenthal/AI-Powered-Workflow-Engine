@@ -1,0 +1,11 @@
+{
+    "entry_point": "hello_name",
+    "tasks": {
+        "name": {
+            "output": "Alan"
+        },
+        "hello_name": {
+            "output": "hello ${name}!"
+        }
+    }
+}

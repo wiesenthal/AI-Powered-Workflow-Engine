@@ -3,12 +3,17 @@ import WorkflowExecutor from "./WorkflowExecutor";
 import { handleCheckWorkflowInputs, handleInputUpdates } from "../utils/inputHandling";
 import { loadWorkflow } from "../utils/fileUtils";
 import { SharedError } from "../../shared/types/error";
+import debugOutputter from "./DebugOutputter";
+import { devLog } from "../utils/logging";
 
 class WorkflowOrhestrator {
     private socket: Socket;
     private workflowExecutor: WorkflowExecutor;
     constructor(socket: Socket) {
         this.socket = socket;
+
+        debugOutputter.setSocket(socket);
+
         this.workflowExecutor = new WorkflowExecutor();
 
         handleInputUpdates(this.socket, this.setInputContextValue);
@@ -18,7 +23,7 @@ class WorkflowOrhestrator {
     }
 
     private setInputContextValue = (key: string, value: string): void => {
-        console.log(`Setting input context value for key ${key} with value ${value}`);
+        devLog(`Setting input context value for key ${key} with value ${value}`);
         this.workflowExecutor.inputContext[key] = value;
     }
 
@@ -27,16 +32,19 @@ class WorkflowOrhestrator {
             workflowName: string, 
             callback: (output: string | SharedError) => void,
         ) => {
-            console.log(`Executing workflow ${workflowName}`);
+            devLog(`Executing workflow ${workflowName}`);
             try {
                 const workflow = loadWorkflow(workflowName);
-                console.log(`Workflow loaded: ${JSON.stringify(workflow)}`)
+                devLog(`Workflow loaded: ${JSON.stringify(workflow)}`)
+
                 const output = await this.workflowExecutor.executeWorkflow(workflow);
-                console.log(`Workflow executed, output: ${output}`);
+                devLog(`Workflow executed, output: ${output}`);
+                debugOutputter.logWorkflowCompletion(workflowName);
                 callback(output);
             } catch (error: any) {
                 error = error as Error;
-                console.log(`Error executing workflow: ${error}`);
+                devLog(`Error executing workflow: ${error}`);
+                debugOutputter.logError(error);
                 callback({ errorMessage: error.message });
             }
         });

@@ -26,10 +26,6 @@ export type IfStep = {
 
 export type Step = WaitStep | LengthStep | GtStep | IfStep;
 
-export type PossibleStepKeys = ExtractKeys<UnionToIntersection<Step>>;
-
-export type PossibleStepValues = UnionToIntersection<Step>[PossibleStepKeys];
-
 export type StepOutput = string | number | boolean;
 
 export type UnparsedWaitStep = {

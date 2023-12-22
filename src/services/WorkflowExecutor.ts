@@ -1,6 +1,7 @@
 import { TaskOutput, Workflow } from '../types/Workflow';
 import { InputContext } from '../types/InputContext';
 import { executeTask } from '../utils/taskExecutionUtils';
+import { devLog } from '../utils/logging';
 
 class WorkflowExecutor {
     public inputContext: InputContext;
@@ -16,15 +17,15 @@ class WorkflowExecutor {
             throw new Error(`Invalid workflow: ${JSON.stringify(workflow)}`);
         }
 
-        console.log(`Executing workflow with entry point ${entryPoint}`);
+        devLog(`Executing workflow with entry point ${entryPoint}`);
 
-        let output = await executeTask(tasks[entryPoint], workflow, this.inputContext);
+        let output = await executeTask(entryPoint, workflow, this.inputContext);
 
         if (typeof output !== 'string') {
             output = JSON.stringify(output);
         }
 
-        console.log(`Workflow executed, output: ${output}`);
+        devLog(`Workflow executed, output: ${output}`);
 
         return output;
     }

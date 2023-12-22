@@ -1,6 +1,7 @@
 import { InputContext } from "../types/InputContext";
-import { WaitStep, StepOutput, Step, PossibleStepKeys, LengthStep, GtStep, IfStep, UnparsedWaitStep, UnparsedStep, UnparsedLengthStep, UnparsedGtStep, UnparsedIfStep } from "../types/Step";
+import { WaitStep, StepOutput, Step, LengthStep, GtStep, IfStep, UnparsedWaitStep, UnparsedStep, UnparsedLengthStep, UnparsedGtStep, UnparsedIfStep } from "../types/Step";
 import { Workflow } from "../types/Workflow";
+import { devLog } from "./logging";
 import { parseStep } from "./parsingUtils";
 
 
@@ -12,7 +13,7 @@ const executeWaitStep = async (unparsedStep: UnparsedWaitStep, workflow: Workflo
         throw new Error('Wait time must be a number');
     }
     
-    console.log(`Waiting for ${waitTime}s`);
+    devLog(`Waiting for ${waitTime}s`);
 
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -63,7 +64,7 @@ export const executeStep = async (step: UnparsedStep, workflow: Workflow, inputC
         throw new Error('Step not found');
     }
 
-    const key = Object.keys(step)[0] as PossibleStepKeys;
+    const key = Object.keys(step)[0] as keyof Step;
 
     switch (key) {
         case 'wait':

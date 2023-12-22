@@ -1,6 +1,7 @@
 import { InputContext } from "../types/InputContext";
 import { StepOutput } from "../types/Step";
 import { Task, TaskOutput, Workflow } from "../types/Workflow";
+import { devLog } from "./logging";
 import { executeTask } from "./taskExecutionUtils";
 
 const taskReferenceRegex = /\$\{([a-zA-Z0-9_]+)\}/g;
@@ -77,22 +78,16 @@ export const parseOutputForTaskNames = async (output: string, workflow: Workflow
             throw new Error(`Missing task referenced: ${taskNameMatches}`);
         }
 
-        const tasksReferenced = taskNameMatches.map(
-            (taskReferenceMatch: string) => 
-                workflow.tasks[taskReferenceMatch]
-        );
-
-        const tasksReferencedOutputs = await Promise.all(
-            tasksReferenced.map(
-                async (taskReferenced: Task) =>
-                    {
-                        const taskOutput = await executeTask(taskReferenced, workflow, inputContext);
-                        return (typeof taskOutput === 'string' ? taskOutput : JSON.stringify(taskOutput));
-                    }
+        const taskOutputs = await Promise.all(
+            taskNameMatches.map(
+                async (taskName: string) => {
+                    const taskOutput = await executeTask(taskName, workflow, inputContext);
+                    return (typeof taskOutput === 'string' ? taskOutput : JSON.stringify(taskOutput));
+                }
             )
         );
         
-        output = replaceTaskReferences(output, taskNameMatches, tasksReferencedOutputs);
+        output = replaceTaskReferences(output, taskNameMatches, taskOutputs);
     }
 
     return output;
@@ -135,7 +130,7 @@ export const parseStepForPreviousOutput = (str: string, previousStepOutput?: Ste
 }
 
 export const parseStep = async (str: StepOutput, workflow: Workflow, inputContext: InputContext, previousStepOutput?: StepOutput): Promise<StepOutput> => {
-    console.log(`Parsing step ${str}, type ${typeof str}, previousStepOutput: ${previousStepOutput}`);
+    devLog(`Parsing step ${str}, type ${typeof str}, previousStepOutput: ${previousStepOutput}`);
     if (typeof str === 'number' || typeof str === 'boolean')
         return str;
 

@@ -35,6 +35,15 @@ class WorkflowOrhestrator {
         });
     }
 
+    private executeWorkflow = async (workflowName: string): Promise<string> => {
+        const workflow = loadWorkflow(workflowName);
+
+        const output = await this.workflowExecutor.executeWorkflow(workflow);
+
+        debugOutputter.logWorkflowCompletion(workflowName);
+        return output;
+    }
+
     private handleWorkflowExecution = () => {
         this.socket.on('executeWorkflow', async (
             workflowName: string, 
@@ -44,15 +53,8 @@ class WorkflowOrhestrator {
             devLog(`Executing workflow ${workflowName}`);
 
             try {
-                const workflow = loadWorkflow(workflowName);
-
-                devLog(`Workflow loaded: ${JSON.stringify(workflow)}`)
-
-                const output = await this.workflowExecutor.executeWorkflow(workflow);
-
+                const output = await this.executeWorkflow(workflowName);
                 devLog(`Workflow executed, output: ${output}`);
-
-                debugOutputter.logWorkflowCompletion(workflowName);
                 callback(output);
             } 
             catch (error: any) {

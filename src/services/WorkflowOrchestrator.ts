@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import WorkflowExecutor from "./WorkflowExecutor";
 import { handleCheckWorkflowInputs, handleInputUpdates } from "../utils/inputHandling";
-import { loadWorkflow } from "../utils/fileUtils";
+import { listAvailableWorkflows, loadWorkflow } from "../utils/fileUtils";
 import { SharedError } from "../../shared/types/error";
 import debugOutputter from "./DebugOutputter";
 import { devLog } from "../utils/logging";
@@ -19,12 +19,20 @@ class WorkflowOrhestrator {
         handleInputUpdates(this.socket, this.setInputContextValue);
         handleCheckWorkflowInputs(this.socket);
 
+        this.handleGetWorkflowNames();
         this.handleWorkflowExecution();
     }
 
     private setInputContextValue = (key: string, value: string): void => {
         devLog(`Setting input context value for key ${key} with value ${value}`);
         this.workflowExecutor.inputContext[key] = value;
+    }
+
+    private handleGetWorkflowNames = () => {
+        this.socket.on('getWorkflowNames', (callback: (workflowNames: string[]) => void) => {
+            const workflowNames = listAvailableWorkflows();
+            callback(workflowNames);
+        });
     }
 
     private handleWorkflowExecution = () => {

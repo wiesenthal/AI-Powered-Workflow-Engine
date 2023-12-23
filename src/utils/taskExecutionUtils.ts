@@ -17,7 +17,9 @@ export const executeTaskSteps = async (taskName: string, task: Task, workflow: W
     for (let i=1; i < task.steps.length; i++) {
         const step = task.steps[i];
         devLog(`Executing step ${JSON.stringify(step)}`);
+
         previousStepOutput = await executeStep(step, workflow, inputContext, previousStepOutput);
+        
         debugOutputter.logStepCompletion(taskName, i, step, previousStepOutput);
     }
 

@@ -1,11 +1,11 @@
-import { Step, StepOutput, UnparsedStep } from "../../src/types/Step";
+import { Step, StepOutput, StepValue, UnparsedStep } from "../../src/types/Step";
 import { TaskOutput } from "../../src/types/Workflow";
 import { SharedError } from "./error";
 
 export type DebugOutput = {
     task?: string;
     step?: number | 'output';
-    unparsed?: TaskOutput | StepOutput;
+    unparsed?: StepValue | TaskOutput;
     command?: keyof Step;
     result?: any;
     error?: SharedError;

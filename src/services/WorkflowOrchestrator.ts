@@ -32,16 +32,22 @@ class WorkflowOrhestrator {
             workflowName: string, 
             callback: (output: string | SharedError) => void,
         ) => {
+
             devLog(`Executing workflow ${workflowName}`);
+
             try {
                 const workflow = loadWorkflow(workflowName);
+
                 devLog(`Workflow loaded: ${JSON.stringify(workflow)}`)
 
                 const output = await this.workflowExecutor.executeWorkflow(workflow);
+
                 devLog(`Workflow executed, output: ${output}`);
+
                 debugOutputter.logWorkflowCompletion(workflowName);
                 callback(output);
-            } catch (error: any) {
+            } 
+            catch (error: any) {
                 error = error as Error;
                 devLog(`Error executing workflow: ${error}`);
                 debugOutputter.logError(error);

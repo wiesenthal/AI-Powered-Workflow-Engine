@@ -1,28 +1,39 @@
 {
     "entry_point": "join",
     "tasks": {
-        "slow_goodbye": {
+        "length1": {
             "steps": [
-                {
-                    "wait": 3
-                },
                 {
                     "length": "@{name1}"
                 }
             ]
         },
-        "slow_name": {
+        "length2": {
             "steps": [
-                {
-                    "wait": 1
-                },
                 {
                     "length": "@{name2}"
                 }
             ]
         },
+        "compare_lengths": {
+            "steps": [
+                {
+                    "gt": [
+                        "${length1}",
+                        "${length2}"
+                    ]
+                },
+                {
+                    "if": {
+                        "condition": "${0}",
+                        "true": "First input is longer than second",
+                        "false": "Second input is longer than or equal to the first"
+                    }
+                }
+            ]
+        },
         "join": {
-            "output": "First input length: ${slow_goodbye} Second input length: ${slow_name}"
+            "output": "${compare_lengths}"
         }
     }
 }

@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 import WorkflowExecutor from "./WorkflowExecutor";
 import openAIAuditor from "./OpenAIAuditor";
 import { handleCheckWorkflowInputs, handleInputUpdates } from "../utils/inputHandling";
-import { listAvailableWorkflows, loadWorkflow } from "../utils/fileUtils";
+import { listAvailableWorkflows, loadWorkflow, updateWorkflow } from "../utils/fileUtils";
 import { SharedError } from "../../shared/types/error";
 import debugOutputter from "./DebugOutputter";
 import { devLog } from "../utils/logging";
@@ -24,6 +24,8 @@ class WorkflowOrhestrator {
         handleCheckWorkflowInputs(this.socket);
 
         this.handleGetWorkflowNames();
+        this.handleGetWorkflowCode();
+        this.handleUpdateWorkflowCode();
         this.handleWorkflowExecution();
     }
 
@@ -36,6 +38,26 @@ class WorkflowOrhestrator {
         this.socket.on('getWorkflowNames', (callback: (workflowNames: string[]) => void) => {
             const workflowNames = listAvailableWorkflows();
             callback(workflowNames);
+        });
+    }
+
+    private handleGetWorkflowCode = () => {
+        this.socket.on('getWorkflowCode', (workflowName: string, callback: (workflowCode: string | SharedError) => void) => {
+            try {
+                const workflow = loadWorkflow(workflowName);
+                callback(JSON.stringify(workflow, null, 4));
+            }
+            catch (error: any) {
+                error = error as Error;
+                debugOutputter.logError(error);
+                callback({ errorMessage: error.message });
+            }
+        });
+    }
+
+    private handleUpdateWorkflowCode = () => {
+        this.socket.on('updateWorkflowCode', (workflowName: string, workflowCode: string) => {
+            updateWorkflow(workflowName, workflowCode);
         });
     }
 

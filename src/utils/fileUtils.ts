@@ -4,6 +4,11 @@ import { Step } from '../types/Step';
 
 const WORKFLOW_FOLDER_PATH = 'workflows';
 
+export function updateWorkflow(name: string, text: string): void {
+    const filePath = `${WORKFLOW_FOLDER_PATH}/${name}.json`;
+    fs.writeFileSync(filePath, text);
+}
+
 export function loadWorkflow(name: string): Workflow {
     const filePath = `${WORKFLOW_FOLDER_PATH}/${name}.json`;
     if (!fs.existsSync(filePath)) {

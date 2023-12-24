@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import { DebugOutput } from '../../shared/types/debug';
 import { TaskOutput } from '../types/Workflow';
 import { SharedError } from '../../shared/types/error';
-import { Step, UnparsedStep } from '../types/Step';
+import { UnparsedStep } from '../types/Step';
 import { devLog } from '../utils/logging';
 
 class DebugOutputter {
@@ -32,7 +32,11 @@ class DebugOutputter {
         }
     }
 
-    public logTaskCompletion = (taskName: string, unparsed: TaskOutput, result: TaskOutput): void => {
+    public logTaskCompletion = (
+        taskName: string,
+        unparsed: TaskOutput,
+        result: TaskOutput
+    ): void => {
         if (typeof result !== 'string') {
             result = JSON.stringify(result);
         }
@@ -44,7 +48,12 @@ class DebugOutputter {
         });
     }
 
-    public logStepCompletion = (taskName: string, step: number, stepDetails: UnparsedStep, result: TaskOutput): void => {
+    public logStepCompletion = (
+        taskName: string,
+        step: number,
+        stepDetails: UnparsedStep,
+        result: TaskOutput
+    ): void => {
         if (typeof result !== 'string') {
             result = JSON.stringify(result);
         }
@@ -74,6 +83,12 @@ class DebugOutputter {
         }
         this.output({
             error: error
+        });
+    }
+
+    public logPlain = (message: string): void => {
+        this.output({
+            plainMessage: message
         });
     }
 

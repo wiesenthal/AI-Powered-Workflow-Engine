@@ -10,4 +10,5 @@ export type DebugOutput = {
     result?: any;
     error?: SharedError;
     completedWorkflow?: string; // indicates a workflow has completed so the client can create a line break
+    plainMessage?: string; // indicates a message that should be displayed without any formatting
 }

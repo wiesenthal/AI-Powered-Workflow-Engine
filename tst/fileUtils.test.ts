@@ -1,3 +1,5 @@
+import fs from 'fs';
+import { loadBasicStepDefs, loadStepDef, loadWorkflow } from '../src/utils/fileUtils';
 
 describe('loadWorkflow', () => {
     it('should load the workflow file if it exists', () => {
@@ -35,5 +37,88 @@ describe('loadWorkflow', () => {
         jest.restoreAllMocks();
     });
 });
-import fs from 'fs';
-import { loadWorkflow } from '../src/utils/fileUtils';
+
+describe('loadBasicStepDefs', () => {
+    it('should load the step definition for wait', () => {
+        
+        const [example, typeDef, executorCode] = loadStepDef('wait.txt', 'basic');
+        
+        expect(example).toBe(`{
+    "wait": 5
+}
+`);
+
+        expect(typeDef).toBe(`
+type Step = {
+    wait: number
+};
+
+type StepOutput = string | number | boolean;
+`
+        );
+        expect(executorCode).toBe(`
+const execute = async (step: Step): Promise<StepOutput> => {
+    const waitTime = step.wait;
+
+    if (typeof waitTime !== 'number') {
+        throw new Error('Wait time must be a number');
+    }
+
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(waitTime);
+        }, waitTime * 1000);
+    });
+};
+`
+        );
+    });
+});
+
+describe ('loadAllBasicStepDefs', () => {
+    it('should load all basic step definitions', () => {
+        const stepDefs = loadBasicStepDefs();
+
+        expect(stepDefs.length).toBe(4);
+    });
+
+    it('should have the first step definition be for gt', () => {
+        const stepDefs = loadBasicStepDefs();
+
+        expect(stepDefs[0][0]).toBe('gt');
+
+        expect(stepDefs[0][1]).toBe(`{
+    "gt": [
+        7,
+        6
+    ]
+}
+`    );
+
+        expect(stepDefs[0][2]).toBe(`
+type Step = {
+    gt: [number, number]
+};
+
+type StepOutput = string | number | boolean;
+`       );
+
+        expect(stepDefs[0][3]).toBe(`
+const execute = async (step: Step): Promise<StepOutput> => {
+    const [a, b] = step.gt;
+
+    if (typeof a !== 'number' || typeof b !== 'number') {
+        const aNum = Number(a);
+        const bNum = Number(b);
+        if (Number.isNaN(aNum) || Number.isNaN(bNum)) {
+            throw new Error('Gt values must be valid numbers');
+        }
+
+        return aNum > bNum;
+    }
+
+    return a > b;
+};
+`       );
+    });
+});

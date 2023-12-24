@@ -1,0 +1,28 @@
+{
+    "gt": [
+        7,
+        6
+    ]
+}
+#SPLIT#
+type Step = {
+    gt: [number, number]
+};
+
+type StepOutput = string | number | boolean;
+#SPLIT#
+const execute = async (step: Step): Promise<StepOutput> => {
+    const [a, b] = step.gt;
+
+    if (typeof a !== 'number' || typeof b !== 'number') {
+        const aNum = Number(a);
+        const bNum = Number(b);
+        if (Number.isNaN(aNum) || Number.isNaN(bNum)) {
+            throw new Error('Gt values must be valid numbers');
+        }
+
+        return aNum > bNum;
+    }
+
+    return a > b;
+};

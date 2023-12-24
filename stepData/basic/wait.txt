@@ -1,0 +1,23 @@
+{
+    "wait": 5
+}
+#SPLIT#
+type Step = {
+    wait: number
+};
+
+type StepOutput = string | number | boolean;
+#SPLIT#
+const execute = async (step: Step): Promise<StepOutput> => {
+    const waitTime = step.wait;
+
+    if (typeof waitTime !== 'number') {
+        throw new Error('Wait time must be a number');
+    }
+
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(waitTime);
+        }, waitTime * 1000);
+    });
+};

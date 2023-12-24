@@ -1,5 +1,5 @@
 import { InputContext } from "../types/InputContext";
-import { StepOutput } from "../types/Step";
+import { Step, StepOutput, StepValue, UnparsedStep, UnparsedStepValue } from "../types/Step";
 import { Task, TaskOutput, Workflow } from "../types/Workflow";
 import { devLog } from "./logging";
 import { executeTask } from "./taskExecutionUtils";
@@ -18,7 +18,11 @@ export const getTaskNameMatches = (str: string): string[] => {
     return matches.map(match => match.replace(taskReferenceRegex, '$1'));
 }
 
-export const replaceTaskReferences = (str: string, taskNameMatches: string[], taskOutputs: string[]): string => {
+export const replaceTaskReferences = (
+    str: string,
+    taskNameMatches: string[],
+    taskOutputs: string[]
+): string => {
     for (let i = 0; i < taskNameMatches.length; i++) {
         const match = taskNameMatches[i];
         const taskOutput = taskOutputs[i];
@@ -39,7 +43,11 @@ export const getInputMatches = (str: string): string[] => {
     return matches.map(match => match.replace(inputReferenceRegex, '$1'));
 }
 
-export const replaceInputReferences = (str: string, inputMatches: string[], inputValues: string[]): string => {
+export const replaceInputReferences = (
+    str: string,
+    inputMatches: string[],
+    inputValues: string[]
+): string => {
     for (let i = 0; i < inputMatches.length; i++) {
         const match = inputMatches[i];
         const inputValue = inputValues[i];
@@ -55,12 +63,15 @@ export const replaceInputReferences = (str: string, inputMatches: string[], inpu
 }
 
 
-export const parseOutputForInputs = (output: string, inputContext: InputContext): string => {
+export const parseOutputForInputs = (
+    output: string,
+    inputContext: InputContext
+): string => {
     const inputMatches = getInputMatches(output);
 
     if (inputMatches.length > 0) {
         const inputValues = inputMatches.map(
-            (inputMatch: string) => 
+            (inputMatch: string) =>
                 inputContext[inputMatch]
         );
 
@@ -70,7 +81,11 @@ export const parseOutputForInputs = (output: string, inputContext: InputContext)
     return output;
 }
 
-export const parseOutputForTaskNames = async (output: string, workflow: Workflow, inputContext: InputContext): Promise<string> => {
+export const parseOutputForTaskNames = async (
+    output: string,
+    workflow: Workflow,
+    inputContext: InputContext
+): Promise<string> => {
     const taskNameMatches = getTaskNameMatches(output);
 
     if (taskNameMatches.length > 0) {
@@ -86,14 +101,18 @@ export const parseOutputForTaskNames = async (output: string, workflow: Workflow
                 }
             )
         );
-        
+
         output = replaceTaskReferences(output, taskNameMatches, taskOutputs);
     }
 
     return output;
 }
 
-export const parseTaskOutput = async (output: TaskOutput, workflow: Workflow, inputContext: InputContext): Promise<TaskOutput> => {
+export const parseTaskOutput = async (
+    output: TaskOutput,
+    workflow: Workflow,
+    inputContext: InputContext
+): Promise<TaskOutput> => {
     if (typeof output === 'number' || typeof output === 'boolean')
         return output;
     output = await parseOutputForTaskNames(output, workflow, inputContext);
@@ -103,7 +122,10 @@ export const parseTaskOutput = async (output: TaskOutput, workflow: Workflow, in
     return output;
 }
 
-export const parseStepForPreviousOutput = (str: string, previousStepOutput?: StepOutput): StepOutput => {
+export const parseStepForPreviousOutput = (
+    str: string,
+    previousStepOutput?: StepOutput
+): StepOutput => {
     if (previousStepOutput === undefined) {
         if (str.match(previousStepOutputRegex)) {
             throw new Error('First step cannot reference previous step str');
@@ -129,7 +151,12 @@ export const parseStepForPreviousOutput = (str: string, previousStepOutput?: Ste
     throw new Error(`Invalid previous step output type: ${typeof previousStepOutput}`);
 }
 
-export const parseStep = async (str: StepOutput, workflow: Workflow, inputContext: InputContext, previousStepOutput?: StepOutput): Promise<StepOutput> => {
+export const parseStep = async (
+    str: StepOutput,
+    workflow: Workflow,
+    inputContext: InputContext,
+    previousStepOutput?: StepOutput
+): Promise<StepOutput> => {
     devLog(`Parsing step ${str}, type ${typeof str}, previousStepOutput: ${previousStepOutput}`);
     if (typeof str === 'number' || typeof str === 'boolean')
         return str;
@@ -144,4 +171,46 @@ export const parseStep = async (str: StepOutput, workflow: Workflow, inputContex
     str = parseOutputForInputs(str, inputContext);
 
     return str;
-}
+};
+
+const parseRecursive = async (
+    value: UnparsedStepValue,
+    workflow: Workflow,
+    inputContext: InputContext,
+    previousStepOutput?: StepOutput
+): Promise<StepValue> => {
+    if (typeof value === 'string') {
+        return await parseStep(value, workflow, inputContext, previousStepOutput);
+    } else if (Array.isArray(value)) {
+        return await Promise.all(value.map(async (v) => await parseRecursive(v, workflow, inputContext, previousStepOutput)));
+    } else if (typeof value === 'object') {
+        const parsedValue: UnparsedStepValue = {};
+        for (let key in value) {
+            parsedValue[key] = await parseRecursive(value[key], workflow, inputContext, previousStepOutput);
+        }
+        return parsedValue;
+    }
+    return value;
+};
+
+export const parseAllStepFields = async (
+    step: UnparsedStep,
+    workflow: Workflow,
+    inputContext: InputContext,
+    previousStepOutput?: StepOutput
+): Promise<Step> => {
+    let key = Object.keys(step)[0] as string;
+    let value = step[key];
+
+    if (typeof value === 'string') {
+        value = await parseStep(value, workflow, inputContext, previousStepOutput);
+    } else if (typeof value === 'object' || Array.isArray(value)) {
+        value = await parseRecursive(value, workflow, inputContext, previousStepOutput);
+    }
+
+    const parsedStep: UnparsedStep = {
+        [key]: value
+    };
+
+    return parsedStep;
+};

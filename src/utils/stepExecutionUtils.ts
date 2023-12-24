@@ -1,54 +1,52 @@
-import { InputContext } from "../types/InputContext";
-import { StepOutput, Step, UnparsedStep, UnparsedStepValue } from "../types/Step";
-import { Workflow } from "../types/Workflow";
-import { parseStep } from "./parsingUtils";
-import { executeWaitStep, executeLengthStep, executeGtStep, executeIfStep } from "../steps/basicSteps";
+import dotenv from "dotenv";
+dotenv.config();
 
-type stepExecutorType = {
-    [key: string] : (step: Step) => Promise<StepOutput>
+import { InputContext } from "../types/InputContext";
+import { StepOutput, Step, UnparsedStep } from "../types/Step";
+import { Workflow } from "../types/Workflow";
+import { executeWaitStep, executeLengthStep, executeGtStep, executeIfStep } from "../steps/basicSteps";
+import { parseAllStepFields } from "./parsingUtils";
+import { tryGenerateWorkingStepExecutorWithAI } from "./aiGenerationUtils";
+import { devLog } from "./logging";
+import debugOutputter from "../services/DebugOutputter";
+import { loadGeneratedExecutorCodes } from "./fileUtils";
+
+export type stepExecutorFunction = (step: Step) => Promise<StepOutput>;
+
+export type stepExecutorMapping = {
+    [key: string]: stepExecutorFunction
 }
 
-const stepExecutors: stepExecutorType = {
+const basicStepExecutors: stepExecutorMapping = {
     "wait": executeWaitStep,
     "length": executeLengthStep,
     "gt": executeGtStep,
     "if": executeIfStep
 }
 
-const parseRecursive = async (value: UnparsedStepValue, workflow: Workflow, inputContext: InputContext, previousStepOutput?: StepOutput): Promise<any> => {
-    if (typeof value === 'string') {
-        return await parseStep(value, workflow, inputContext, previousStepOutput);
-    } else if (Array.isArray(value)) {
-        return await Promise.all(value.map(async (v) => await parseRecursive(v, workflow, inputContext, previousStepOutput)));
-    } else if (typeof value === 'object') {
-        const parsedValue: UnparsedStepValue = {};
-        for (let key in value) {
-            parsedValue[key] = await parseRecursive(value[key], workflow, inputContext, previousStepOutput);
+const getAIGeneratedExecutor = async (step: Step): Promise<stepExecutorFunction> => {
+    const key = Object.keys(step)[0];
+
+    for (const [stepName, executorCode] of loadGeneratedExecutorCodes()) {
+        if (stepName === key) {
+            debugOutputter.logPlain(`Executing Step '${key}' with previously AI generated executor.`);
+            devLog(`Step '${key}' found in previously AI generated steps, using executor.`);
+            const executor = eval(`${executorCode}; execute;`);
+            return executor;
         }
-        return parsedValue;
-    }
-    return value;
-}
-
-const parseAllStepFields = async (step: UnparsedStep, workflow: Workflow, inputContext: InputContext, previousStepOutput?: StepOutput): Promise<Step> => {
-    let key = Object.keys(step)[0] as string;
-    let value = step[key]
-
-    if (typeof value === 'string') {
-        value = await parseStep(value, workflow, inputContext, previousStepOutput);
-    } else if (typeof value === 'object' || Array.isArray(value)) {
-        value = await parseRecursive(value, workflow, inputContext, previousStepOutput);
     }
 
-    const parsedStep: UnparsedStep = {
-        [key]: value
-    };
-
-    return parsedStep;
+    debugOutputter.logPlain(`'${key}' step unrecognized, AI trying to generate new executor...`);
+    devLog(`Step '${key}' not found, AI generating new executor for ${JSON.stringify(step)}`)
+    return await tryGenerateWorkingStepExecutorWithAI(step, 3, true);
 }
-    
 
-export const executeStep = async (step: UnparsedStep, workflow: Workflow, inputContext: InputContext, previousStepOutput?: StepOutput): Promise<StepOutput> => {
+export const executeStep = async (
+    step: UnparsedStep,
+    workflow: Workflow,
+    inputContext: InputContext,
+    previousStepOutput?: StepOutput
+): Promise<StepOutput> => {
     if (!step) {
         throw new Error('Step not found');
     }
@@ -57,10 +55,14 @@ export const executeStep = async (step: UnparsedStep, workflow: Workflow, inputC
 
     const key = Object.keys(parsedStep)[0];
 
-    if (!key || !(key in stepExecutors)) {
+    let executor: stepExecutorFunction;
+    if (key in basicStepExecutors) {
+        executor = basicStepExecutors[key];
+    } else if (process.env.AI_ENABLED) {
+        executor = await getAIGeneratedExecutor(parsedStep);
+    } else {
         throw new Error(`Invalid step: ${JSON.stringify(step)}`);
     }
 
-    const executor = stepExecutors[key];
     return await executor(parsedStep);
 }

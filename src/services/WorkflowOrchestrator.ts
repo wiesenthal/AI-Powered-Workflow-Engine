@@ -1,5 +1,6 @@
 import { Socket } from "socket.io";
 import WorkflowExecutor from "./WorkflowExecutor";
+import openAIAuditor from "./OpenAIAuditor";
 import { handleCheckWorkflowInputs, handleInputUpdates } from "../utils/inputHandling";
 import { listAvailableWorkflows, loadWorkflow } from "../utils/fileUtils";
 import { SharedError } from "../../shared/types/error";
@@ -7,12 +8,15 @@ import debugOutputter from "./DebugOutputter";
 import { devLog } from "../utils/logging";
 
 class WorkflowOrhestrator {
+
     private socket: Socket;
     private workflowExecutor: WorkflowExecutor;
+
     constructor(socket: Socket) {
         this.socket = socket;
 
         debugOutputter.setSocket(socket);
+        openAIAuditor.setSocket(socket);
 
         this.workflowExecutor = new WorkflowExecutor();
 

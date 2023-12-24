@@ -29,6 +29,11 @@ Implement AI task decomposition into steps given a library of steps.
 
 User authentication and storing their generated steps or custom workflows privately.
 
+## Workflow Editing
+
+I also implemented the ability to edit workflows for much needed flexibility. Note that this does change the backend storage of the workflow.   
+If this were to be implemented in a multi-user production setting these custom workflows would be specific to the user, rather than global.
+
 ## Pre-Requisites
 node=18.16.1
 npm=9.5.1

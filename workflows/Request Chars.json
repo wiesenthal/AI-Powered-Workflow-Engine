@@ -1,0 +1,19 @@
+{
+    "entry_point": "request",
+    "tasks": {
+        "request": {
+            "steps": [
+                {
+                    "cast_number": "@{num_chars}"
+                },
+                {
+                    "http_request_fetch": {
+                        "url": "https://httpbin.org/",
+                        "method": "GET",
+                        "num_chars_to_return": "${0}"
+                    }
+                }
+            ]
+        }
+    }
+}

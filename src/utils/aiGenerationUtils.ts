@@ -98,8 +98,6 @@ const tryGenerateCode = async (
 
     // FUTURE: Could generate a test for the executor and run it here
 
-    devLog(`Generated executor: ${executor}, Executing ${JSON.stringify(step, null, 4)}`);
-
     const result = await executor(step);
     if (result === undefined) {
         throw new Error('Executed function did not return.');

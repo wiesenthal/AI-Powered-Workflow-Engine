@@ -8,6 +8,22 @@ If a step name is unrecognized, my workflow engine will generate a novel functio
 
 NOTE: Evaluating AI generated code is implemented in an unsafe way. Making this code execution in a production-capable way was out of scope.
 
+It worked better than I expected, from the folllowing workflow, it was able to generate two steps, one that cast the input to a number, and one to make an http request returning the first n characters. 
+```json
+"steps": [
+    {
+        "cast_number": "@{num_chars}"
+    },
+    {
+        "http_request_fetch": {
+            "url": "https://httpbin.org/",
+            "method": "GET",
+            "num_chars_to_return": "${0}"
+        }
+    }
+]
+```
+
 ### Future Possibilities
 Implement AI task decomposition into steps given a library of steps.
 
@@ -20,7 +36,7 @@ npm=9.5.1
 ## Setup
 
 Create a .env file with the following keys:  
-```
+```sh
 DEV_LOG=0 # Or 1 to turn on verbose logging  
 
 AI_ENABLED=1 # Or 0 to turn off AI generation 
@@ -28,10 +44,11 @@ AI_ENABLED=1 # Or 0 to turn off AI generation
 OPENAI_API_KEY=<Your OpenAI API Key>
 
 CHAT_COMPLETION_MODEL=gpt-3.5-turbo # Or gpt-4 or gpt-4-1106-preview
-# I have found it works well with gpt-3.5-turbo
+# I have found it works best with gpt-3.5-turbo
 ```
 
-`npm install`  
-`npm start`
+Run  
+`$npm install`  
+`$npm start`
 
 Go to localhost:5001

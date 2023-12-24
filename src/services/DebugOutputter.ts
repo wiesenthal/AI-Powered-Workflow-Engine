@@ -17,7 +17,6 @@ class DebugOutputter {
     }
 
     public output = (output: DebugOutput): void => {
-        devLog(`Outputting: ${JSON.stringify(output)}`);
         if (this.socket) {
             if (this.storedOutputs.length > 0) {
                 this.storedOutputs.forEach(storedOutput => {

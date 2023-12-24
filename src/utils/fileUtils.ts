@@ -143,5 +143,5 @@ export const saveAICode = (
     // Below is human readable
     fs.writeFileSync(`${aiFolderPath}/${stepName}.ts`, typeDefAndCode);
     // Below would be for using generated steps for ICL prompting
-    fs.writeFileSync(`${aiFolderPath}/${stepName}.txt`, `${exampleString}\n\n//#SPLIT#//\n\n${typeDefAndCode}\n\n//#SPLIT#//\n\n${jsCode}`);
+    fs.writeFileSync(`${aiFolderPath}/${stepName}.txt`, `${exampleString}\n\n//#SPLIT#//\n\n${typeDef}\n\n//#SPLIT#//\n\n${stepOutputTypeDef}\n\n${tsCode}`);
 }

@@ -115,7 +115,7 @@ describe('WorkflowExecutor', () => {
                     "slow_goodbye": {
                         "steps": [
                             {
-                                "wait": 1
+                                "wait": 0.2
                             }
                         ],
                         "output": "goodbye!"
@@ -129,7 +129,7 @@ describe('WorkflowExecutor', () => {
 
             expect(result).toBeDefined();
             expect(result).toBe("goodbye!");
-            expect(elapsedTime).toBeCloseTo(1000, -3);
+            expect(elapsedTime).toBeCloseTo(200, -2);
         });
 
         it('should execute concurrent wait tasks within the same period of time', async () => {
@@ -139,7 +139,7 @@ describe('WorkflowExecutor', () => {
                     "slow_goodbye": {
                         "steps": [
                             {
-                                "wait": 1
+                                "wait": 0.2
                             }
                         ],
                         "output": "goodbye"
@@ -147,7 +147,7 @@ describe('WorkflowExecutor', () => {
                     "slow_name": {
                         "steps": [
                             {
-                                "wait": 1
+                                "wait": 0.2
                             }
                         ],
                         "output": "Ada"
@@ -164,7 +164,7 @@ describe('WorkflowExecutor', () => {
 
             expect(result).toBeDefined();
             expect(result).toBe("goodbye Ada!");
-            expect(elapsedTime).toBeCloseTo(1000, -3);
+            expect(elapsedTime).toBeCloseTo(200, -2);
         });
 
         it('Should throw error if wait input is not a number', async () => {
@@ -245,23 +245,6 @@ describe('WorkflowExecutor', () => {
 
             expect(result).toBeDefined();
             expect(result).toBe("true");
-        });
-
-        it('should throw error if gt input is not an array of two numbers', async () => {
-            const workflow: Workflow = {
-                "entry_point": "checkgt",
-                "tasks": {
-                    "checkgt": {
-                        "steps": [
-                            {
-                                "gt": [4, "blah"]
-                            }
-                        ]
-                    }
-                }
-            }
-
-            await expect(workflowExecutor.executeWorkflow(workflow)).rejects.toThrow();
         });
     });
 

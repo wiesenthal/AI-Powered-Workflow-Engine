@@ -14,19 +14,23 @@ export const executeTaskSteps = async (taskName: string, task: Task, workflow: W
     let previousStepOutput: StepOutput = await executeStep(task.steps[0], workflow, inputContext);
     debugOutputter.logStepCompletion(taskName, 0, task.steps[0], previousStepOutput);
 
-    for (let i=1; i < task.steps.length; i++) {
+    for (let i = 1; i < task.steps.length; i++) {
         const step = task.steps[i];
         devLog(`Executing step ${JSON.stringify(step)}`);
 
         previousStepOutput = await executeStep(step, workflow, inputContext, previousStepOutput);
-        
+
         debugOutputter.logStepCompletion(taskName, i, step, previousStepOutput);
     }
 
     return previousStepOutput;
 }
 
-export const executeTask = async (taskName: string, workflow: Workflow, inputContext: InputContext): Promise<TaskOutput> => {
+export const executeTask = async (
+    taskName: string,
+    workflow: Workflow,
+    inputContext: InputContext
+): Promise<TaskOutput> => {
     const task = workflow.tasks[taskName];
     if (!task) {
         debugOutputter.logError(new Error('Task not found'));
@@ -41,6 +45,6 @@ export const executeTask = async (taskName: string, workflow: Workflow, inputCon
         output = await parseTaskOutput(task.output, workflow, inputContext);
         debugOutputter.logTaskCompletion(taskName, task.output, output);
     }
-    
+
     return output;
 }

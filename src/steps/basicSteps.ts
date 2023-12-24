@@ -13,7 +13,9 @@ export const executeWaitStep = async (step: Step): Promise<StepOutput> => {
 
     return new Promise((resolve) => {
         setTimeout(() => {
+
             resolve(waitTime);
+
         }, waitTime * 1000);
     });
 };
@@ -40,16 +42,14 @@ export const executeGtStep = async (step: Step): Promise<boolean> => {
     const [a, b] = (step as GtStep).gt;
 
     if (typeof a !== 'number' || typeof b !== 'number') {
-        try {
-            const aNum = Number(a);
-            const bNum = Number(b);
-            if (typeof aNum === 'number' && typeof bNum === 'number') {
-                return aNum > bNum;
-            }
+        const aNum = Number(a);
+        const bNum = Number(b);
+
+        if (Number.isNaN(aNum) || Number.isNaN(bNum)) {
+            throw new Error('Gt values must be valid numbers');
         }
-        catch (e) {
-            throw new Error(`Gt values must be numbers. a: ${a}, b: ${b}`);
-        }
+
+        return aNum > bNum;
     }
 
     return a > b;
@@ -64,14 +64,14 @@ export type IfStep = {
 }
 
 export const executeIfStep = async (step: Step): Promise<StepOutput> => {
-    const value = (step as IfStep).if;
+    const ifStatement = (step as IfStep).if;
 
-    if (typeof value.condition !== 'boolean') {
+    if (typeof ifStatement.condition !== 'boolean') {
         throw new Error('If condition must be a boolean');
     }
 
-    return value.condition ?
-        await value.true
+    return ifStatement.condition ?
+        await ifStatement.true
         :
-        await value.false;
+        await ifStatement.false;
 };

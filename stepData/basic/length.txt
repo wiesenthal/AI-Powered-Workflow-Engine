@@ -1,13 +1,13 @@
 {
     "length": "How long is this sentence?"
 }
-#SPLIT#
+//#SPLIT#//
 type Step = {
     length: string
 };
 
 type StepOutput = string | number | boolean;
-#SPLIT#
+//#SPLIT#//
 const execute = async (step: Step): Promise<StepOutput> => {
     const str = step.length;
 

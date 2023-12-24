@@ -129,7 +129,7 @@ export const tryGenerateWorkingStepExecutorWithAI = async (
             success = true;
 
             if (saveWorkingCode) {
-                saveAICode(key, jsCode, tsCode, typeDefinition);
+                saveAICode(key, step, jsCode, tsCode, typeDefinition);
             }
 
             return executor;

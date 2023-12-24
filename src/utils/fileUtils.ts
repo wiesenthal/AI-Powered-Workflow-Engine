@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { Workflow } from '../types/Workflow';
+import { Step } from '../types/Step';
 
 const WORKFLOW_FOLDER_PATH = 'workflows';
 
@@ -52,7 +53,7 @@ export const loadStepDef = (
     }
 
     const fileContent = fs.readFileSync(basicFolderPath, 'utf-8');
-    const splitText = fileContent.split('#SPLIT#');
+    const splitText = fileContent.split('//#SPLIT#//');
     
     if (splitText.length !== 3) {
         throw new Error(`Basic step ${fileName} is not formatted correctly`);
@@ -89,8 +90,7 @@ export const loadGeneratedStepDefs = (): [StepName, Example, TypeDefinition, Cod
 
     const files = fs.readdirSync(aiFolderPath);
 
-    // filter out .js files
-    files.filter(file => file.endsWith('.ts'));
+    files.filter(file => file.endsWith('.txt'));
 
     return files.map(file => {
         const [example, typeDef, executorCode] = loadStepDef(file, origin);
@@ -110,7 +110,6 @@ export const loadGeneratedExecutorCodes = (): [StepName, Code][] => {
 
     const files = fs.readdirSync(aiFolderPath);
 
-    // filter out .ts files
     files.filter(file => file.endsWith('.js'));
 
     return files.map(file => {
@@ -120,7 +119,12 @@ export const loadGeneratedExecutorCodes = (): [StepName, Code][] => {
     });
 }
 
-export const saveAICode = (stepName: string, jsCode: string, tsCode: string, typeDef: string): void => {
+export const saveAICode = (
+    stepName: string, 
+    example: string | Step,
+    jsCode: string,
+    tsCode: string, 
+    typeDef: string): void => {
     const destination: stepOrigin = "generated";
     const aiFolderPath = `${STEP_DATA_FOLDER_PATH}/${destination}`;
 
@@ -128,11 +132,16 @@ export const saveAICode = (stepName: string, jsCode: string, tsCode: string, typ
         fs.mkdirSync(aiFolderPath);
     }
 
-    fs.writeFileSync(`${aiFolderPath}/${stepName}.js`, jsCode);
+    const exampleString = typeof example === 'string' ? example : JSON.stringify(example, null, 4);
 
     const stepOutputTypeDef = `type StepOutput = string | number | boolean;`;
 
-    const typeDefAndCode = `type Step = ${typeDef}\n${stepOutputTypeDef}\n\n\n${tsCode}`;
+    const typeDefAndCode = `type Step = ${typeDef}\n\n${stepOutputTypeDef}\n\n${tsCode}`;
 
+    // Below is for executing code
+    fs.writeFileSync(`${aiFolderPath}/${stepName}.js`, jsCode);
+    // Below is human readable
     fs.writeFileSync(`${aiFolderPath}/${stepName}.ts`, typeDefAndCode);
+    // Below would be for using generated steps for ICL prompting
+    fs.writeFileSync(`${aiFolderPath}/${stepName}.txt`, `${exampleString}\n\n//#SPLIT#//\n\n${typeDefAndCode}\n\n//#SPLIT#//\n\n${jsCode}`);
 }

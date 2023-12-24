@@ -3,7 +3,7 @@
     "true": "this would be the result",
     "false": "this would be the result if condition were false"
 }
-#SPLIT#
+//#SPLIT#//
 type Step = {
     if: {
         condition: boolean
@@ -13,7 +13,7 @@ type Step = {
 };
 
 type StepOutput = string | number | boolean;
-#SPLIT#
+//#SPLIT#//
 const execute = async (step: Step): Promise<StepOutput> => {
     const ifStatement = step.if;
 

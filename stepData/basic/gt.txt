@@ -4,13 +4,13 @@
         6
     ]
 }
-#SPLIT#
+//#SPLIT#//
 type Step = {
     gt: [number, number]
 };
 
 type StepOutput = string | number | boolean;
-#SPLIT#
+//#SPLIT#//
 const execute = async (step: Step): Promise<StepOutput> => {
     const [a, b] = step.gt;
 

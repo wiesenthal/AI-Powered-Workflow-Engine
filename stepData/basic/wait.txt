@@ -1,13 +1,13 @@
 {
     "wait": 5
 }
-#SPLIT#
+//#SPLIT#//
 type Step = {
     wait: number
 };
 
 type StepOutput = string | number | boolean;
-#SPLIT#
+//#SPLIT#//
 const execute = async (step: Step): Promise<StepOutput> => {
     const waitTime = step.wait;
 

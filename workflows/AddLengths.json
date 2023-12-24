@@ -18,22 +18,15 @@
         "compare_lengths": {
             "steps": [
                 {
-                    "gt": [
+                    "add": [
                         "${length1}",
                         "${length2}"
                     ]
-                },
-                {
-                    "if": {
-                        "condition": "${0}",
-                        "true": "First input is longer than second",
-                        "false": "Second input is longer than or equal to the first"
-                    }
                 }
             ]
         },
         "join": {
-            "output": "${compare_lengths}"
+            "output": "Length of @{name1} + length of @{name2} = ${compare_lengths}"
         }
     }
 }

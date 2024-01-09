@@ -6,7 +6,12 @@ import { executeStep } from "./stepExecutionUtils";
 import debugOutputter from "../services/DebugOutputter";
 import { devLog } from "./logging";
 
-export const executeTaskSteps = async (taskName: string, task: Task, workflow: Workflow, inputContext: InputContext): Promise<StepOutput> => {
+export const executeTaskSteps = async (
+    taskName: string, 
+    task: Task, 
+    workflow: Workflow, 
+    inputContext: InputContext
+): Promise<StepOutput> => {
     if (!task.steps) {
         return task.output;
     }

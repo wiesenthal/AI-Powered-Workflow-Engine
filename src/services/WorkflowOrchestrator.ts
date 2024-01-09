@@ -42,7 +42,10 @@ class WorkflowOrhestrator {
     }
 
     private handleGetWorkflowCode = () => {
-        this.socket.on('getWorkflowCode', (workflowName: string, callback: (workflowCode: string | SharedError) => void) => {
+        this.socket.on('getWorkflowCode', (
+            workflowName: string, 
+            callback: (workflowCode: string | SharedError) => void
+        ) => {
             try {
                 const workflow = loadWorkflow(workflowName);
                 callback(JSON.stringify(workflow, null, 4));
@@ -56,8 +59,10 @@ class WorkflowOrhestrator {
     }
 
     private handleUpdateWorkflowCode = () => {
-        this.socket.on('updateWorkflowCode', (workflowName: string, workflowCode: string) => {
-            // validate the code is valid JSON
+        this.socket.on('updateWorkflowCode', (
+            workflowName: string, 
+            workflowCode: string
+        ) => {
             try {
                 JSON.parse(workflowCode);
                 updateWorkflow(workflowName, workflowCode);

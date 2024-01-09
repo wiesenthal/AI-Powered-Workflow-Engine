@@ -57,7 +57,15 @@ class WorkflowOrhestrator {
 
     private handleUpdateWorkflowCode = () => {
         this.socket.on('updateWorkflowCode', (workflowName: string, workflowCode: string) => {
-            updateWorkflow(workflowName, workflowCode);
+            // validate the code is valid JSON
+            try {
+                JSON.parse(workflowCode);
+                updateWorkflow(workflowName, workflowCode);
+            }
+            catch (error: any) {
+                error = error as Error;
+                debugOutputter.logError(error);
+            }
         });
     }
 

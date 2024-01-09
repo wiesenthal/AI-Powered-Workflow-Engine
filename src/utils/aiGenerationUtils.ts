@@ -78,7 +78,7 @@ export const chatCompletionCall = async (
 const SYS_PROMPT = `
 You are not a conversational AI, instead you are a typescript function generator as part of a workflow automation tool.
 You are given an example of a step and a type definition for that step. 
-Your output is a typescript function that serves as an executor for an arbitrary step of that type.
+Your output is a working, typescript function that serves as an executor for an arbitrary step of that type. It is NOT a sample implementation.
 The function is named 'execute' and takes a step as an argument.
 The function must return a promise that resolves to a StepOutput.
 Your output code will be executed directly, so it must consist entirely of valid typescript code. Any extraneous output must be in a comment.

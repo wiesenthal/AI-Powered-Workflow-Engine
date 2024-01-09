@@ -4,7 +4,7 @@ import { Task, TaskOutput, Workflow } from "../types/Workflow";
 import { devLog } from "./logging";
 import { executeTask } from "./taskExecutionUtils";
 
-const taskReferenceRegex = /\$\{([a-zA-Z0-9_]+)\}/g;
+const taskReferenceRegex = /\$\{((?!0)[a-zA-Z0-9_]+)\}/g;
 const previousStepOutputRegex = /\$\{0\}/g;
 const inputReferenceRegex = /\@\{([a-zA-Z0-9_]+)\}/g;
 
@@ -139,16 +139,12 @@ export const parseStepForPreviousOutput = (
 
     if (typeof previousStepOutput === 'string') {
         return str.replace(previousStepOutputRegex, previousStepOutput);
-    }
-
-    if (typeof previousStepOutput === 'number' || typeof previousStepOutput === 'boolean') {
+    } else {
         if (str !== "${0}") {
-            throw new Error(`Cannot reference previous step output that is a number of boolean in a string unless is it alone in the string. Str: ${str}, previousStepOutput: ${previousStepOutput}`);
+            return str.replace(previousStepOutputRegex, JSON.stringify(previousStepOutput));
         }
         return previousStepOutput;
     }
-
-    throw new Error(`Invalid previous step output type: ${typeof previousStepOutput}`);
 }
 
 export const parseStep = async (
@@ -156,19 +152,23 @@ export const parseStep = async (
     workflow: Workflow,
     inputContext: InputContext,
     previousStepOutput?: StepOutput
-): Promise<StepOutput> => {
+): Promise<StepValue> => {
     devLog(`Parsing step ${str}, type ${typeof str}, previousStepOutput: ${previousStepOutput}`);
     if (typeof str === 'number' || typeof str === 'boolean')
         return str;
+
+    str = parseOutputForInputs(str, inputContext);
+
+    str = await parseOutputForTaskNames(str, workflow, inputContext);
 
     str = parseStepForPreviousOutput(str, previousStepOutput);
 
     if (typeof str === 'number' || typeof str === 'boolean')
         return str;
 
-    str = await parseOutputForTaskNames(str, workflow, inputContext);
-
-    str = parseOutputForInputs(str, inputContext);
+    if (typeof str !== 'string') {
+        return await parseRecursive(str, workflow, inputContext, previousStepOutput);
+    }
 
     return str;
 };

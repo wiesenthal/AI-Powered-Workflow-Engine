@@ -1,7 +1,7 @@
 import { Socket } from "socket.io";
 import { loadWorkflow } from "./fileUtils";
 import { SharedError } from "../../shared/types/error";
-import { getInputMatches } from "./parsingUtils";
+import { getMatches, inputReferenceRegex,  } from "./parsingUtils";
 import { devLog } from "./logging";
 
 type setInputFnType = (key: string, value: string) => void;
@@ -23,11 +23,11 @@ export const handleCheckWorkflowInputs = (socket: Socket): void => {
         try {
             const workflow = loadWorkflow(workflowName);
 
-            const inputMatches = getInputMatches(JSON.stringify(workflow));
+            const inputKeys = getMatches(JSON.stringify(workflow), inputReferenceRegex).map(match => match.key);
 
-            const uniqueInputMatches = [...new Set(inputMatches)];
+            const uniqueInputKeys = [...new Set(inputKeys)];
 
-            callback(uniqueInputMatches);
+            callback(uniqueInputKeys);
         }
         catch {
             callback({ errorMessage: 'Error loading workflow' });

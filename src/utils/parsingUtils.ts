@@ -1,81 +1,53 @@
+import { get } from "http";
 import { InputContext } from "../types/InputContext";
 import { Step, StepOutput, StepValue, UnparsedStep, UnparsedStepValue } from "../types/Step";
 import { Task, TaskOutput, Workflow } from "../types/Workflow";
 import { devLog } from "./logging";
 import { executeTask } from "./taskExecutionUtils";
 
-const taskReferenceRegex = /\$\{((?!0)[a-zA-Z0-9_]+)\}/g;
-const previousStepOutputRegex = /\$\{0\}/g;
-const inputReferenceRegex = /\@\{([a-zA-Z0-9_]+)\}/g;
+export const taskReferenceRegex = /\$\{((?!0)[a-zA-Z0-9_]+)\}/g;
+export const previousStepOutputRegex = /\$\{0\}/g;
+export const inputReferenceRegex = /\@\{([a-zA-Z0-9_]+)\}/g;
 
-export const getTaskNameMatches = (str: string): string[] => {
-    const matches = str.match(taskReferenceRegex);
-
-    if (!matches) {
-        return [];
-    }
-
-    return matches.map(match => match.replace(taskReferenceRegex, '$1'));
-}
-
-export const replaceTaskReferences = (
-    str: string,
-    taskNameMatches: string[],
-    taskOutputs: string[]
-): string => {
-    for (let i = 0; i < taskNameMatches.length; i++) {
-        const match = taskNameMatches[i];
-        const taskOutput = taskOutputs[i];
-
-        str = str.replace(`\$\{${match}}`, taskOutput);
-    }
-
-    return str;
-}
-
-export const getInputMatches = (str: string): string[] => {
-    const matches = str.match(inputReferenceRegex);
+export const getMatches = (str: string, regex: RegExp): { match: string, key: string }[] => {
+    const matches = str.match(regex);
 
     if (!matches) {
         return [];
     }
 
-    return matches.map(match => match.replace(inputReferenceRegex, '$1'));
+    return matches.map(match => {
+        return {
+            "match": match,
+            "key": match.replace(regex, '$1')
+        };
+    });
 }
 
-export const replaceInputReferences = (
+export const replaceReferences = (
     str: string,
-    inputMatches: string[],
-    inputValues: string[]
+    matches: { match: string, key: string }[],
+    keyValues: { [key: string]: string }
 ): string => {
-    for (let i = 0; i < inputMatches.length; i++) {
-        const match = inputMatches[i];
-        const inputValue = inputValues[i];
+    for (let match of matches) {
+        const key = match.key;
+        const value = keyValues[key] || '';
+        const matchStr = match.match;
 
-        if (!inputValue) {
-            str = str.replace(`\@\{${match}\}`, '');
-        }
-
-        str = str.replace(`\@\{${match}\}`, inputValue);
+        str = str.replace(matchStr, value);
     }
 
     return str;
 }
-
 
 export const parseOutputForInputs = (
     output: string,
     inputContext: InputContext
 ): string => {
-    const inputMatches = getInputMatches(output);
+    const inputMatches = getMatches(output, inputReferenceRegex);
 
     if (inputMatches.length > 0) {
-        const inputValues = inputMatches.map(
-            (inputMatch: string) =>
-                inputContext[inputMatch]
-        );
-
-        output = replaceInputReferences(output, inputMatches, inputValues);
+        output = replaceReferences(output, inputMatches, inputContext);
     }
 
     return output;
@@ -86,24 +58,27 @@ export const parseOutputForTaskNames = async (
     workflow: Workflow,
     inputContext: InputContext
 ): Promise<string> => {
-    const taskNameMatches = getTaskNameMatches(output);
+    const taskNameMatches = getMatches(output, taskReferenceRegex);
 
-    if (taskNameMatches.length > 0) {
-        if (taskNameMatches.some((taskNameMatch: string) => !workflow.tasks[taskNameMatch])) {
-            throw new Error(`Missing task referenced: ${taskNameMatches}`);
-        }
-
-        const taskOutputs = await Promise.all(
-            taskNameMatches.map(
-                async (taskName: string) => {
-                    const taskOutput = await executeTask(taskName, workflow, inputContext);
-                    return (typeof taskOutput === 'string' ? taskOutput : JSON.stringify(taskOutput));
-                }
-            )
-        );
-
-        output = replaceTaskReferences(output, taskNameMatches, taskOutputs);
+    if (taskNameMatches.length == 0) {
+        return output;
     }
+
+    if (taskNameMatches.some(({ match, key }) => !workflow.tasks[key])) {
+        throw new Error(`Missing task referenced: ${taskNameMatches}`);
+    }
+
+    const taskOutputs = await Promise.all(
+        taskNameMatches.map(
+            async ({ key, match }) => {
+                return [
+                    key,
+                    (await executeTask(key, workflow, inputContext)).toString()
+                ];
+            })
+    ).then(Object.fromEntries);
+
+    output = replaceReferences(output, taskNameMatches, taskOutputs);
 
     return output;
 }
@@ -115,6 +90,7 @@ export const parseTaskOutput = async (
 ): Promise<TaskOutput> => {
     if (typeof output === 'number' || typeof output === 'boolean')
         return output;
+
     output = await parseOutputForTaskNames(output, workflow, inputContext);
 
     output = parseOutputForInputs(output, inputContext);

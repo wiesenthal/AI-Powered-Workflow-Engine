@@ -1,17 +1,49 @@
 {
-    "entry_point": "request",
+    "entry_point": "format_judge",
     "tasks": {
-        "request": {
+        "format_judge": {
+            "output": "The probability that @{statement} is ${judge}"
+        },
+        "input": {
+            "output": "@{statement}"
+        },
+        "judge": {
             "steps": [
                 {
-                    "cast_number": "@{num_chars}"
+                    "extract_number_from_str": "${openAIResponse}"
                 },
                 {
-                    "http_request_fetch": {
-                        "url": "https://httpbin.org/",
-                        "method": "GET",
-                        "num_chars_to_return": "${0}"
+                    "format_as_percentage": "${0}"
+                }
+            ]
+        },
+        "openAIResponse": {
+            "steps": [
+                {
+                    "stringify": {
+                        "object": {
+                            "model": "gpt-3.5-turbo",
+                            "messages": [
+                                {
+                                    "role": "user",
+                                    "content": "You are a probability guesser. Output a single number representing the percentage likelihood of the following statement to be true. Your output must always contain an integer so it can be parsed; even if it is a total guess. Statement: ${input}"
+                                }
+                            ]
+                        }
                     }
+                },
+                {
+                    "fetch": {
+                        "url": "https://api.openai.com/v1/chat/completions",
+                        "headers": {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer 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"
+                        },
+                        "body": "${0}"
+                    }
+                },
+                {
+                    "extract_message_content": "${0}"
                 }
             ]
         }

@@ -1,14 +1,17 @@
 import { InputContext } from "../src/types/InputContext";
 import { Workflow } from "../src/types/Workflow";
-import { getInputMatches, getTaskNameMatches, parseTaskOutput, parseOutputForInputs, parseOutputForTaskNames, replaceInputReferences, replaceTaskReferences } from "../src/utils/parsingUtils";
+import { parseTaskOutput, parseOutputForInputs, parseOutputForTaskNames, getMatches, replaceReferences } from "../src/utils/parsingUtils";
 
 describe('parsingUtils', () => {
-    describe('getTaskNameMatches', () => {
+    describe('getMatches', () => {
         it('should return an array of task name matches', () => {
-            const str = 'Hello ${world}! I am ${copilot}.';
-            const expectedMatches = ['world', 'copilot'];
+            const str = 'Hello ${world}! I am ${miles}.';
+            const expectedMatches = [
+                { key: 'world', match: '${world}' },
+                { key: 'miles', match: '${miles}' }
+            ]
 
-            const taskNameMatches = getTaskNameMatches(str);
+            const taskNameMatches = getMatches(str, /\${(.*?)}/g);
 
             expect(taskNameMatches).toEqual(expectedMatches);
         });
@@ -16,7 +19,7 @@ describe('parsingUtils', () => {
         it('should return an empty array if no task name matches found', () => {
             const str = 'Hello world!';
 
-            const taskNameMatches = getTaskNameMatches(str);
+            const taskNameMatches = getMatches(str, /\${(.*?)}/g);
 
             expect(taskNameMatches).toEqual([]);
         });
@@ -24,12 +27,18 @@ describe('parsingUtils', () => {
 
     describe('replaceTaskReferences', () => {
         it('should replace task references with task outputs', () => {
-            const str = 'Hello ${world}! I am ${copilot}.';
-            const taskNameMatches = ['world', 'copilot'];
-            const taskOutputs = ['GitHub', 'Copilot'];
-            const expectedOutput = 'Hello GitHub! I am Copilot.';
+            const str = 'Hello ${world}! I am ${miles}.';
+            const taskNameMatches = [
+                { key: 'world', match: '${world}' },
+                { key: 'miles', match: '${miles}' }
+            ]
+            const taskOutputs = {
+                "world": "Universe",
+                "miles": "Miles"
+            }
+            const expectedOutput = 'Hello Universe! I am Miles.';
 
-            const result = replaceTaskReferences(str, taskNameMatches, taskOutputs);
+            const result = replaceReferences(str, taskNameMatches, taskOutputs);
 
             expect(result).toEqual(expectedOutput);
         });
@@ -37,10 +46,13 @@ describe('parsingUtils', () => {
 
     describe('getInputMatches', () => {
         it('should return an array of input matches', () => {
-            const str = 'Hello @{world}! I am @{copilot}.';
-            const expectedMatches = ['world', 'copilot'];
+            const str = 'Hello @{world}! I am @{miles}.';
+            const expectedMatches = [
+                { key: 'world', match: '@{world}' },
+                { key: 'miles', match: '@{miles}' }
+            ]
 
-            const inputMatches = getInputMatches(str);
+            const inputMatches = getMatches(str, /@\{(.*?)\}/g);
 
             expect(inputMatches).toEqual(expectedMatches);
         });
@@ -48,7 +60,7 @@ describe('parsingUtils', () => {
         it('should return an empty array if no input matches found', () => {
             const str = 'Hello world!';
 
-            const inputMatches = getInputMatches(str);
+            const inputMatches = getMatches(str, /@\{(.*?)\}/g);
 
             expect(inputMatches).toEqual([]);
         });
@@ -56,12 +68,18 @@ describe('parsingUtils', () => {
 
     describe('replaceInputReferences', () => {
         it('should replace input references with input values', () => {
-            const str = 'Hello @{world}! I am @{copilot}.';
-            const inputMatches = ['world', 'copilot'];
-            const inputValues = ['GitHub', 'Copilot'];
-            const expectedOutput = 'Hello GitHub! I am Copilot.';
+            const str = 'Hello @{world}! I am @{miles}.';
+            const inputMatches = [
+                { key: 'world', match: '@{world}' },
+                { key: 'miles', match: '@{miles}' }
+            ]
+            const inputContext = {
+                "world": "Universe",
+                "miles": "Miles"
+            }
+            const expectedOutput = 'Hello Universe! I am Miles.';
 
-            const result = replaceInputReferences(str, inputMatches, inputValues);
+            const result = replaceReferences(str, inputMatches, inputContext);
 
             expect(result).toEqual(expectedOutput);
         });

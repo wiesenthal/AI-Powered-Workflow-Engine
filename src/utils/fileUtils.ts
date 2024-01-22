@@ -25,16 +25,6 @@ export function listAvailableWorkflows(): string[] {
     const files = fs.readdirSync(WORKFLOW_FOLDER_PATH);
     const workflowNames = files.map(file => file.split('.')[0]);
 
-    // sort to show 'Step ' workflows first, then alphabetically
-    workflowNames.sort((a, b) => {
-        if (a.startsWith('Step') && !b.startsWith('Step')) {
-            return -1;
-        }
-        if (!a.startsWith('Step') && b.startsWith('Step')) {
-            return 1;
-        }
-        return a.localeCompare(b);
-    });
     return workflowNames;
 }
 

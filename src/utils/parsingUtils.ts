@@ -83,21 +83,6 @@ export const parseOutputForTaskNames = async (
     return output;
 }
 
-export const parseTaskOutput = async (
-    output: TaskOutput,
-    workflow: Workflow,
-    inputContext: InputContext
-): Promise<TaskOutput> => {
-    if (typeof output === 'number' || typeof output === 'boolean')
-        return output;
-
-    output = await parseOutputForTaskNames(output, workflow, inputContext);
-
-    output = parseOutputForInputs(output, inputContext);
-
-    return output;
-}
-
 export const parseStepForPreviousOutput = (
     str: string,
     previousStepOutput?: StepOutput
@@ -123,6 +108,42 @@ export const parseStepForPreviousOutput = (
     }
 }
 
+
+const parseObjectOrArray = async (
+    value: UnparsedStepValue,
+    workflow: Workflow,
+    inputContext: InputContext,
+    previousStepOutput?: StepOutput
+): Promise<StepValue> => {
+    if (typeof value === 'string') {
+        return await parseStep(value, workflow, inputContext, previousStepOutput);
+    } else if (Array.isArray(value)) {
+        return await Promise.all(value.map(async (v) => await parseObjectOrArray(v, workflow, inputContext, previousStepOutput)));
+    } else if (typeof value === 'object') {
+        const parsedValue: UnparsedStepValue = {};
+        for (let key in value) {
+            parsedValue[key] = await parseObjectOrArray(value[key], workflow, inputContext, previousStepOutput);
+        }
+        return parsedValue;
+    }
+    return value;
+};
+
+export const parseTaskOutput = async (
+    output: TaskOutput,
+    workflow: Workflow,
+    inputContext: InputContext
+): Promise<TaskOutput> => {
+    if (typeof output === 'number' || typeof output === 'boolean')
+        return output;
+
+    output = await parseOutputForTaskNames(output, workflow, inputContext);
+
+    output = parseOutputForInputs(output, inputContext);
+
+    return output;
+}
+
 export const parseStep = async (
     str: StepOutput,
     workflow: Workflow,
@@ -143,30 +164,10 @@ export const parseStep = async (
         return str;
 
     if (typeof str !== 'string') {
-        return await parseRecursive(str, workflow, inputContext, previousStepOutput);
+        return await parseObjectOrArray(str, workflow, inputContext, previousStepOutput);
     }
 
     return str;
-};
-
-const parseRecursive = async (
-    value: UnparsedStepValue,
-    workflow: Workflow,
-    inputContext: InputContext,
-    previousStepOutput?: StepOutput
-): Promise<StepValue> => {
-    if (typeof value === 'string') {
-        return await parseStep(value, workflow, inputContext, previousStepOutput);
-    } else if (Array.isArray(value)) {
-        return await Promise.all(value.map(async (v) => await parseRecursive(v, workflow, inputContext, previousStepOutput)));
-    } else if (typeof value === 'object') {
-        const parsedValue: UnparsedStepValue = {};
-        for (let key in value) {
-            parsedValue[key] = await parseRecursive(value[key], workflow, inputContext, previousStepOutput);
-        }
-        return parsedValue;
-    }
-    return value;
 };
 
 export const parseAllStepFields = async (
@@ -181,7 +182,7 @@ export const parseAllStepFields = async (
     if (typeof value === 'string') {
         value = await parseStep(value, workflow, inputContext, previousStepOutput);
     } else if (typeof value === 'object' || Array.isArray(value)) {
-        value = await parseRecursive(value, workflow, inputContext, previousStepOutput);
+        value = await parseObjectOrArray(value, workflow, inputContext, previousStepOutput);
     }
 
     const parsedStep: UnparsedStep = {

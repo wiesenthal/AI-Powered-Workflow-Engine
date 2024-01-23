@@ -1,6 +1,6 @@
 # Workflow Engine
 
-An system to execute tasks and steps defined in a declarative JSON-based langauge.
+An system to execute tasks and steps defined in a declarative JSON-based language.
 
 ## AI Step Executor Generation
 If a step name is unrecognized, my workflow engine will generate a novel function to execute this type of step using AI, or access a library of previously generated steps.

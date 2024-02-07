@@ -2,6 +2,15 @@
 
 An system to execute tasks and steps defined in a declarative JSON-based language.
 
+## Demo
+
+
+https://github.com/wiesenthal/workflow-engine/assets/26258920/aa42a02b-a74a-4326-b189-bd22b127c8a7
+
+(Sorry about low quality - GitHub filesize limit)  
+Also note the API key is no longer valid
+
+
 ## AI Step Executor Generation
 If a step name is unrecognized, my workflow engine will generate a novel function to execute this type of step using AI, or access a library of previously generated steps.
 

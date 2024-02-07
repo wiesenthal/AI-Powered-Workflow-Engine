@@ -50,6 +50,8 @@ npm=9.5.1
 
 ## Setup
 
+Make sure you have the [frontend repo](https://github.com/wiesenthal/workflow-engine-frontend/tree/main) downloaded and saved as a directory titled "frontend" within this parent repository.
+
 Create a .env file with the following keys:  
 ```sh
 DEV_LOG=0 # Or 1 to turn on verbose logging  

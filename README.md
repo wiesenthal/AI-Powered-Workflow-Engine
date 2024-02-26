@@ -1,6 +1,6 @@
 # Workflow Engine
 
-An system to execute tasks and steps defined in a declarative JSON-based language.
+Executes tasks and steps defined in a declarative JSON-based language. Uses a LLM with In-Context-Learning to generate typescript functions that execute unrecognized steps. 
 
 Frontend Repo: https://github.com/wiesenthal/workflow-engine-frontend/tree/main
 
